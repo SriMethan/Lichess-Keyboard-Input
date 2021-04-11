@@ -1055,15 +1055,17 @@
 };
 
 if (/^https:\/\/(lichess\.org|lichess\.dev|mskchess\.ru)\/(\w{8}|\w{12})(\/white|\/black)?$/.test(window.location.href)) {
-    let nonce, src, text;
+   let nonce, src, text;
     const observer = new MutationObserver((mutations, observer) => {
         mutations.forEach((mutation) => {
             if (mutation.addedNodes[0] && mutation.addedNodes[0].tagName && mutation.addedNodes[0].tagName.toLowerCase() === 'script') {
                 let script = mutation.addedNodes[0];
                 if (script.src.indexOf('round') !== -1) {
+                    console.log('script1', script.src, script);
                     src = script.src;
                     script.parentElement.removeChild(script)
                 } else if (script.innerText.indexOf('lichess.load.then(()=>{LichessRound') !== -1) {
+                    console.log('script2', script.src, script);
                     nonce = script.getAttribute('nonce');
                     text = script.innerText;
                     script.parentElement.removeChild(script)
@@ -1075,23 +1077,15 @@ if (/^https:\/\/(lichess\.org|lichess\.dev|mskchess\.ru)\/(\w{8}|\w{12})(\/white
     });
     observer.observe(document.documentElement, { childList: true, subtree: true });
 
-    const finishLoading = () => {
+     const finishLoading = () => {
         Promise.all([src].map(u => fetch(u))).then(responses =>
             Promise.all(responses.map(res => res.text()))
         ).then(info => {
-            let completed;
-            let tIndex = info[0].search(/!\w{1}\.isT/);
-            if (tIndex !== -1) {
-                let dIndex = info[0].search(/\.isT/);
-                let numberOfLetters = dIndex - tIndex - 1;
-                completed = info[0].replace(/!\w\.isT\w{6}/, `(${info[0].substr(tIndex, numberOfLetters + 11)} && (!${info[0].substr(tIndex + 1, numberOfLetters)}.data || ${info[0].substr(tIndex + 1, numberOfLetters)}.data[5] !== '-'))`);
-            } else {
-                completed = info[0];
-            }
+            let completed = info[0].replace(/\w+\.isTru\w{4}/, 'true');
             let firstOne = document.createElement('script');
             let secondOne = document.createElement('script');
-            firstOne.innerHTML = `console.log(2);${completed}`;
-            secondOne.innerHTML = `console.log(3);${text}`;
+            firstOne.innerHTML = `${completed}`;
+            secondOne.innerHTML = `${text}`;
             firstOne.setAttribute('nonce', nonce)
             firstOne.setAttribute('defer', 'defer')
             secondOne.setAttribute('nonce', nonce)
