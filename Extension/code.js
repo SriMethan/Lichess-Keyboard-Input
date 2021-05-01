@@ -1059,6 +1059,7 @@ var innerContent = function () {
 (function() {
     "use strict";
     let nonce, src, text;
+    // Stolen from: https://github.com/artyompal/lichess_keyboard. credits to him.
     let activate = true;
 
     const observer = new MutationObserver((mutations, observer) => {
