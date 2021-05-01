@@ -1,8 +1,9 @@
-﻿var innerContent = function () {
+var innerContent = function () {
+    "use strict";
     setTimeout(function () {
         console.log(performance.now());
         var cx, cy;
-        var doit = 0, sName, convertionString = MouseEvent;
+        var doit = 1, sName, convertionString = MouseEvent;
         if (document.getElementById("user_tag") != undefined) {
             var name1 = document.getElementById("user_tag").innerText;
             var name1H = name1.innerText;
@@ -1054,30 +1055,39 @@
     }, 400);
 };
 
-if (/^https:\/\/(lichess\.org|lichess\.dev|mskchess\.ru)\/(\w{8}|\w{12})(\/white|\/black)?$/.test(window.location.href)) {
-   let nonce, src, text;
+
+(function() {
+    "use strict";
+    let nonce, src, text;
+    let activate = true;
+
     const observer = new MutationObserver((mutations, observer) => {
         mutations.forEach((mutation) => {
             if (mutation.addedNodes[0] && mutation.addedNodes[0].tagName && mutation.addedNodes[0].tagName.toLowerCase() === 'script') {
                 let script = mutation.addedNodes[0];
-                if (script.src.indexOf('round') !== -1) {
-                    console.log('script1', script.src, script);
-                    src = script.src;
-                    script.parentElement.removeChild(script)
-                } else if (script.innerText.indexOf('lichess.load.then(()=>{LichessRound') !== -1) {
-                    console.log('script2', script.src, script);
-                    nonce = script.getAttribute('nonce');
-                    text = script.innerText;
-                    script.parentElement.removeChild(script)
-                    observer.disconnect();
-                    finishLoading();
+
+                if (script.src.endsWith('chessground.min.js')) {
+                    activate = false;
+                }
+
+                if (activate) {
+                    if (src === undefined && script.src !== '' && !script.src.endsWith('lichess.min.js')) {
+                        src = script.src;
+                        script.parentElement.removeChild(script);
+                    } else if (src !== undefined && script.src === '') {
+                        nonce = script.getAttribute('nonce');
+                        text = script.innerText;
+                        script.parentElement.removeChild(script)
+                        observer.disconnect();
+                        finishLoading();
+                    }
                 }
             }
         })
     });
     observer.observe(document.documentElement, { childList: true, subtree: true });
 
-     const finishLoading = () => {
+    const finishLoading = () => {
         Promise.all([src].map(u => fetch(u))).then(responses =>
             Promise.all(responses.map(res => res.text()))
         ).then(info => {
@@ -1097,5 +1107,4 @@ if (/^https:\/\/(lichess\.org|lichess\.dev|mskchess\.ru)\/(\w{8}|\w{12})(\/white
             document.body.appendChild(windowScript);
         });
     }
-
-}
+})();
