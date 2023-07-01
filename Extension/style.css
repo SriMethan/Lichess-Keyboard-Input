@@ -1,4 +1,4 @@
-#KeyboardO {
+#Keyboard1 {
     cursor: pointer; 
      height: 49px;
      width:50px;
@@ -30,7 +30,7 @@
 }
 
 
-#KeyboardO:focus {
+#Keyboard1:focus {
     outline-width: 0;
 }
 
